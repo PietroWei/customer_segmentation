@@ -34,15 +34,35 @@ customer-segmentation/
 The dataset is publicly available at [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/online+retail).
 
 ## 🔧 Setup Instructions
+
+### Using Docker Compose
+
 1. Clone this repository:
    ```bash
    git clone https://github.com/yourusername/customer-segmentation.git
    cd customer-segmentation
    ```
+
+2. Build and run the Docker containers:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. Access the Streamlit dashboard at `http://localhost:8501`.
+
+### Without Docker
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/customer-segmentation.git
+   cd customer-segmentation
+   ```
+
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
+
 3. Set up PostgreSQL database:
    - Create a PostgreSQL database (e.g., `customer_db`)
    - Update connection details in `config/config.py`
@@ -50,14 +70,17 @@ The dataset is publicly available at [UCI Machine Learning Repository](https://a
      ```bash
      psql -U username -d customer_db -f sql/create_tables.sql
      ```
+
 4. Load the dataset into PostgreSQL:
    ```bash
    python scripts/load_data.py
    ```
+
 5. Run the clustering analysis:
    ```bash
    python scripts/rfm_analysis.py
    ```
+
 6. Start the Streamlit dashboard:
    ```bash
    streamlit run dashboard/app.py
