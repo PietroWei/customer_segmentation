@@ -11,7 +11,7 @@ import os
 
 # Function to load the pre-trained model
 def load_model(model_name):
-    model_path = f"../scripts/models/{model_name}_model.pkl"  # Assuming models are stored in a "models" directory
+    model_path = f"scripts/models/{model_name}_model.pkl"  # Assuming models are stored in a "models" directory
     if os.path.exists(model_path):
         with open(model_path, 'rb') as f:
             return pickle.load(f)
@@ -20,7 +20,7 @@ def load_model(model_name):
         return None
 
 # Load data from Excel
-file_path = "../data/OnlineRetail.xlsx"
+file_path = "data/OnlineRetail.xlsx"
 df = pd.read_excel(file_path)
 
 # Preprocess data
