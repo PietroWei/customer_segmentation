@@ -3,6 +3,7 @@
 
 import pandas as pd
 import psycopg2
+from config.config import DB_SETTINGS
 
 # Caricare il dataset
 df = pd.read_excel("Online Retail.xlsx")
@@ -12,7 +13,13 @@ df = df.dropna(subset=['CustomerID'])  # Rimuovere transazioni senza ID cliente
 df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
 
 # Connessione al database
-conn = psycopg2.connect("dbname=yourdb user=youruser password=yourpass host=localhost")
+conn = psycopg2.connect(
+    dbname=DB_SETTINGS['dbname'],
+    user=DB_SETTINGS['user'],
+    password=DB_SETTINGS['password'],
+    host=DB_SETTINGS['host'],
+    port=DB_SETTINGS['port']
+)
 cursor = conn.cursor()
 
 # Creazione delle tabelle
@@ -45,6 +52,8 @@ cursor.close()
 conn.close()
 
 # Step 2: Estrarre dati RFM con SQL
+# Corrected the SQL query syntax
+rfm_query = """
 SELECT
     c.customer_id,
     NOW() - MAX(s.sale_date) AS recency,
@@ -53,6 +62,7 @@ SELECT
 FROM sales s
 JOIN customers c ON s.customer_id = c.customer_id
 GROUP BY c.customer_id;
+"""
 
 # Step 3: Analisi RFM & Clustering in Python
 import numpy as np
@@ -61,14 +71,14 @@ import plotly.express as px
 import streamlit as st
 
 # Connessione al database e lettura dati RFM
-df_rfm = pd.read_sql_query("""
-    SELECT customer_id, 
-           EXTRACT(DAY FROM (NOW() - MAX(sale_date))) AS recency,
-           COUNT(DISTINCT invoice_no) AS frequency,
-           SUM(total_amount) AS monetary
-    FROM sales 
-    GROUP BY customer_id;
-""", conn)
+conn = psycopg2.connect(
+    dbname=DB_SETTINGS['dbname'],
+    user=DB_SETTINGS['user'],
+    password=DB_SETTINGS['password'],
+    host=DB_SETTINGS['host'],
+    port=DB_SETTINGS['port']
+)
+df_rfm = pd.read_sql_query(rfm_query, conn)
 
 # Normalizzazione e Clustering
 rfm_values = df_rfm[['recency', 'frequency', 'monetary']]
@@ -81,3 +91,5 @@ st.title("Customer Segmentation & Retention Analysis")
 st.write("Questa dashboard mostra i segmenti clienti usando il modello RFM.")
 fig = px.scatter_3d(df_rfm, x='recency', y='frequency', z='monetary', color='cluster', title="Customer Segments")
 st.plotly_chart(fig)
+
+conn.close()

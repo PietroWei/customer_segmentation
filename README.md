@@ -1,7 +1,30 @@
 # Customer Segmentation & Retention Analysis
 
 ## 📌 Overview
-This project analyzes customer purchasing behavior using the **Online Retail Dataset (UCI Machine Learning)**. We implement **RFM analysis (Recency, Frequency, Monetary)** and use **K-Means clustering** to segment customers. The results are displayed in an interactive **Streamlit dashboard**.
+This project analyzes customer purchasing behavior using the **Online Retail Dataset (UCI Machine Learning)**. We implement **RFM analysis (Recency, Frequency, Monetary)** and use various clustering algorithms (**K-Means clustering**, **DBScan** and **Agglomerative Clustering**) to segment customers. The results are displayed in an interactive **Streamlit dashboard**.
+
+### **Consideration of 4 Clusters**
+In this project, **4 clusters** were initially chosen based on common marketing segmentation strategies using the RFM (Recency, Frequency, Monetary) model:
+
+1. **Champions**: Recent, frequent, and high spenders.
+2. **Loyal Customers**: Frequent, moderate spenders.
+3. **Potential Loyalists**: Recent, moderate spenders.
+4. **At-Risk Customers**: Infrequent, low spenders.
+
+However, the number of clusters can be optimized using various methods: 
+
+- **Elbow Method** to find the optimal number of clusters by evaluating within-cluster sum of squares.
+-  **Silhouette Score** to determine the best number of clusters based on cluster separation.
+-  **Gap Statistics** for comparing clustering against random data.
+-  **Davies-Bouldin Index** to measure cluster similarity.
+
+**Alternative Clustering Methods**:
+
+-  **K-Means**: A widely-used method that partitions the data into a predefined number of clusters (e.g., 4).
+-  **DBScan**: A density-based clustering algorithm that doesn't require a predefined number of clusters and is good for discovering clusters of arbitrary shape.
+-  **Agglomerative Clustering**: A hierarchical clustering algorithm that builds a tree of clusters, providing a visual representation to help determine the number of clusters.
+
+The clustering results are stored and used in a Streamlit dashboard for visualization and analysis.
 
 ## 🏗 Project Structure
 ```

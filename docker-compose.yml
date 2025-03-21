@@ -12,12 +12,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  init_db:
+    build: .
+    command: /app/init_db.sh
+    depends_on:
+      - db
+    environment:
+      DB_NAME: customer_db
+      DB_USER: PietroWei
+      DB_PASSWORD: Gionniwei98@
+      DB_HOST: db
+      DB_PORT: 5432
+
   app:
     build: .
     ports:
       - "8501:8501"
     depends_on:
       - db
+      - init_db
     environment:
       DB_NAME: customer_db
       DB_USER: PietroWei

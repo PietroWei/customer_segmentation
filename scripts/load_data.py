@@ -1,5 +1,6 @@
 import pandas as pd
 import psycopg2
+from config.config import DB_SETTINGS  # Import DB_SETTINGS from config.py
 
 def load_customer_data(file_path):
     """
@@ -18,8 +19,14 @@ def load_customer_data(file_path):
     df = df.dropna(subset=['CustomerID'])  # Remove transactions without CustomerID
     df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
     
-    # Connect to PostgreSQL database
-    conn = psycopg2.connect("dbname=yourdb user=youruser password=yourpass host=localhost")
+    # Connect to PostgreSQL database using settings from config.py
+    conn = psycopg2.connect(
+        dbname=DB_SETTINGS['dbname'],
+        user=DB_SETTINGS['user'],
+        password=DB_SETTINGS['password'],
+        host=DB_SETTINGS['host'],
+        port=DB_SETTINGS['port']
+    )
     cursor = conn.cursor()
     
     # Create tables if they don't exist

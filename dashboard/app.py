@@ -1,10 +1,20 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import psycopg2
+from config.config import DB_SETTINGS
 
 # Connect to PostgreSQL database
-conn = psycopg2.connect("dbname=yourdb user=youruser password=yourpass host=localhost")
+conn = psycopg2.connect(
+    dbname=DB_SETTINGS['dbname'],
+    user=DB_SETTINGS['user'],
+    password=DB_SETTINGS['password'],
+    host=DB_SETTINGS['host'],
+    port=DB_SETTINGS['port']
+)
 
 # Extract RFM data
 df_rfm = pd.read_sql_query("""

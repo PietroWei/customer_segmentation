@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 import psycopg2
+from config.config import DB_SETTINGS
 
 def compute_rfm():
     """
@@ -11,7 +12,13 @@ def compute_rfm():
     DataFrame: DataFrame containing RFM metrics and cluster labels.
     """
     # Connect to PostgreSQL database
-    conn = psycopg2.connect("dbname=yourdb user=youruser password=yourpass host=localhost")
+    conn = psycopg2.connect(
+        dbname=DB_SETTINGS['dbname'],
+        user=DB_SETTINGS['user'],
+        password=DB_SETTINGS['password'],
+        host=DB_SETTINGS['host'],
+        port=DB_SETTINGS['port']
+    )
     
     # Extract RFM data
     df_rfm = pd.read_sql_query("""
