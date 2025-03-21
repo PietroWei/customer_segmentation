@@ -3,6 +3,8 @@
 ## 📌 Overview
 This project analyzes customer purchasing behavior using the **Online Retail Dataset (UCI Machine Learning)**. We implement **RFM analysis (Recency, Frequency, Monetary)** and use various clustering algorithms (**K-Means clustering**, **DBScan** and **Agglomerative Clustering**) to segment customers. The results are displayed in an interactive **Streamlit dashboard**.
 
+**Deployed at:** [Customer Segmentation App](https://customersegmentation-pg.streamlit.app/)
+
 ### **Consideration of 4 Clusters**
 In this project, **4 clusters** were initially chosen based on common marketing segmentation strategies using the RFM (Recency, Frequency, Monetary) model:
 
