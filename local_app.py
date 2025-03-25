@@ -54,6 +54,7 @@ st.markdown("""
     - Contains **invoices, customer IDs, quantity, unit price, and timestamps**
     - Helps analyze purchasing behavior and customer value
 """)
+
 # Sidebar Configuration
 st.sidebar.header("Settings")
 st.sidebar.write("Choose a clustering algorithm to visualize the customer segments.")
@@ -64,16 +65,12 @@ algorithm = st.sidebar.selectbox(
             - **DBSCAN**: A density-based clustering algorithm that groups closely packed points while marking outliers.
             - **Agglomerative Clustering**: A hierarchical clustering approach that iteratively merges data points into clusters."""
 )
-
-# Ensure the load_model function is defined
-def load_model(model_name):
-    # Placeholder function implementation
-    # Replace this with your actual model-loading logic
-    return model_name
-
 # Load selected clustering model
-model = load_model(algorithm.lower().replace(" ", "_"))
+model_name = algorithm.lower().replace(" ", "_").replace("-", "")
+model = load_model(model_name)
 
+if model is None:
+    st.stop()  # Stops execution if the model is not found
 
 if model is not None:
     try:
