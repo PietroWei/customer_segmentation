@@ -1,25 +1,26 @@
 import pandas as pd
 import numpy as np
-from sklearn.cluster import KMeans
-import plotly.express as px
+import os
+import pickle
 import streamlit as st
+import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
-import pickle
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
-import os
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 
 # Function to load the pre-trained model
 def load_model(model_name):
-    model_path = f"scripts/models/{model_name}_model.pkl"  # Assuming models are stored in a "models" directory
+    model_path = f"scripts/models/{model_name}_model.pkl"  # Model directory path
     if os.path.exists(model_path):
         with open(model_path, 'rb') as f:
             return pickle.load(f)
     else:
-        st.error(f"Model {model_name} not found!")
+        st.error(f"Model '{model_name}' not found! Please train and save the model.")
         return None
 
-# Load data from Excel
+# Load dataset
+st.sidebar.header("Dataset Information")
+st.sidebar.write("The dataset used in this project comes from the **Online Retail Dataset** available at the UCI Machine Learning Repository. It contains transactional data from an online retail store, including customer purchases, invoice details, and timestamps.")
 file_path = "data/OnlineRetail.xlsx"
 df = pd.read_excel(file_path)
 
@@ -28,7 +29,7 @@ df = df.dropna(subset=['CustomerID'])  # Remove missing customer IDs
 df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
 df['TotalAmount'] = df['Quantity'] * df['UnitPrice']
 
-# Calculate RFM metrics
+# Compute RFM metrics
 snapshot_date = df['InvoiceDate'].max() + pd.Timedelta(days=1)
 rfm_df = df.groupby('CustomerID').agg(
     recency=('InvoiceDate', lambda x: (snapshot_date - x.max()).days),
@@ -37,97 +38,92 @@ rfm_df = df.groupby('CustomerID').agg(
 ).reset_index()
 
 # Normalize RFM values
-rfm_values = rfm_df[['recency', 'frequency', 'monetary']]
-rfm_values = (rfm_values - rfm_values.mean()) / rfm_values.std()
+rfm_values = (rfm_df[['recency', 'frequency', 'monetary']] - rfm_df[['recency', 'frequency', 'monetary']].mean()) \
+             / rfm_df[['recency', 'frequency', 'monetary']].std()
 
-# Streamlit App
-st.set_page_config(layout="wide")
+# Streamlit App Setup
+st.set_page_config(layout="wide", page_title="Customer Segmentation", page_icon="📊")
 st.title("Customer Segmentation & Retention Analysis")
-st.write("This dashboard shows customer segments using the RFM model.")
+st.markdown("""
+    This dashboard allows interactive exploration of customer segments using **RFM analysis**.
+    Choose a clustering method to segment customers based on their purchasing behavior.
 
-# Sidebar for selections
-st.sidebar.title("Settings")
-st.sidebar.write("Choose the clustering algorithm and view the results.")
+    **Dataset Summary:**
+    - Transactions from an online retail store
+    - Contains **invoices, customer IDs, quantity, unit price, and timestamps**
+    - Helps analyze purchasing behavior and customer value
+""")
 
-# Select clustering algorithm
-algorithm = st.sidebar.selectbox("Choose Clustering Algorithm", ["K-Means", "DBSCAN", "Agglomerative"])
+# Sidebar Configuration
+st.sidebar.header("Settings")
+st.sidebar.write("Choose a clustering algorithm to visualize the customer segments.")
+algorithm = st.sidebar.selectbox("Select Clustering Algorithm", ["K-Means", "DBSCAN", "Agglomerative Clustering"])
 
-# Load pre-trained model based on selection
-if algorithm == "K-Means":
-    model = load_model('kmeans')
-    st.sidebar.write("**K-Means Clustering**: Partitions data into K clusters by minimizing the variance within each cluster.")
-elif algorithm == "DBSCAN":
-    model = load_model('dbscan')
-    st.sidebar.write("**DBSCAN**: Density-based clustering that groups together points that are closely packed.")
-elif algorithm == "Agglomerative":
-    model = load_model('agglomerative')
-    st.sidebar.write("**Agglomerative Clustering**: Hierarchical clustering that merges clusters iteratively.")
+# Load selected clustering model
+model = load_model(algorithm.lower().replace(" ", "_"))
 
 if model is not None:
-    # Use the loaded model for predictions
-    rfm_df['cluster'] = model.predict(rfm_values) if hasattr(model, 'predict') else model.fit_predict(rfm_values)
-
-    # Display processed data
-    st.write("### First Few Rows of Processed Data")
-    st.dataframe(rfm_df.head())
-
-    # Display Cluster Profile
-    st.write("### Cluster Profile")
-    cluster_profile = rfm_df.groupby('cluster')[['recency', 'frequency', 'monetary']].mean()
-    st.dataframe(cluster_profile)
-
-    # Interactive Cluster Filter
-    cluster_filter = st.sidebar.selectbox("Select Cluster", options=rfm_df['cluster'].unique())
-    filtered_data = rfm_df[rfm_df['cluster'] == cluster_filter]
-    st.write(f"### Cluster {cluster_filter} Profile")
-    st.dataframe(filtered_data)
-
-    # 3D Scatter Plot
-    fig = px.scatter_3d(rfm_df, x='recency', y='frequency', z='monetary', color='cluster', title="Customer Segments")
-    st.plotly_chart(fig)
-
-    # Histograms of RFM Variables
-    st.write("### Distribution of RFM Variables")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        fig_recency = px.histogram(rfm_df, x='recency', title="Recency Distribution")
-        st.plotly_chart(fig_recency)
-    with col2:
-        fig_frequency = px.histogram(rfm_df, x='frequency', title="Frequency Distribution")
-        st.plotly_chart(fig_frequency)
-    with col3:
-        fig_monetary = px.histogram(rfm_df, x='monetary', title="Monetary Distribution")
-        st.plotly_chart(fig_monetary)
-
-    # Correlation Heatmap
-    st.write("### Correlation Heatmap of RFM Variables")
-    corr_matrix = rfm_df[['recency', 'frequency', 'monetary']].corr()
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
-    st.pyplot(plt)
-
-    # Download Button for Processed Data
-    st.write("### Download Segmented Data")
-    csv = rfm_df.to_csv(index=False)
-    st.download_button(label="Download CSV", data=csv, file_name="segmented_customers.csv", mime="text/csv")
-
-    # Predict Customer Segment
-    st.write("### Predict Customer Segment Based on RFM Scores")
-    recency_input = st.number_input("Recency (Days)", min_value=0)
-    frequency_input = st.number_input("Frequency", min_value=1)
-    monetary_input = st.number_input("Monetary Amount", min_value=0)
-
-    # Compute Button to Trigger Prediction
-    if st.button("Compute Segment"):
-        input_data = np.array([[recency_input, frequency_input, monetary_input]])
+    try:
+        # Apply clustering
+        rfm_df['cluster'] = model.predict(rfm_values) if hasattr(model, 'predict') else model.fit_predict(rfm_values)
         
-        # Normalize input data
-        input_data_normalized = (input_data - rfm_values.mean().values) / rfm_values.std().values
+        # Display processed data
+        st.subheader("Clustered Data")
+        st.dataframe(rfm_df.head())
         
-        # Predict using the loaded clustering model
-        if hasattr(model, 'predict'):
-            cluster_pred = model.predict(input_data_normalized)
-        else:
-            cluster_pred = model.fit_predict(input_data_normalized)
+        # Cluster Profile Analysis
+        st.subheader("Cluster Profiles")
+        st.markdown("Each cluster represents a group of customers with similar purchasing behavior, categorized based on Recency, Frequency, and Monetary values.")
+        cluster_profile = rfm_df.groupby('cluster')[['recency', 'frequency', 'monetary']].mean()
+        st.dataframe(cluster_profile)
         
-        st.write(f"Predicted Cluster: {cluster_pred[0]}")
+        # Cluster Selection for Detailed Analysis
+        cluster_filter = st.sidebar.selectbox("Select Cluster for Details", options=rfm_df['cluster'].unique())
+        st.subheader(f"Cluster {cluster_filter} Details")
+        st.dataframe(rfm_df[rfm_df['cluster'] == cluster_filter])
+        
+        # 3D Scatter Plot
+        st.subheader("Customer Segmentation Visualization")
+        st.write("The following 3D scatter plot visualizes customer groups based on RFM scores. Each point represents a customer, with colors indicating different clusters.")
+        fig = px.scatter_3d(rfm_df, x='recency', y='frequency', z='monetary', color='cluster', title="Customer Segments")
+        st.plotly_chart(fig)
+        
+        # RFM Distributions
+        st.subheader("Distribution of RFM Metrics")
+        st.write("Understanding the distribution of Recency, Frequency, and Monetary values helps in identifying customer behavior patterns.")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.plotly_chart(px.histogram(rfm_df, x='recency', title="Recency Distribution"))
+        with col2:
+            st.plotly_chart(px.histogram(rfm_df, x='frequency', title="Frequency Distribution"))
+        with col3:
+            st.plotly_chart(px.histogram(rfm_df, x='monetary', title="Monetary Distribution"))
+        
+        # Correlation Heatmap
+        st.subheader("RFM Correlation Heatmap")
+        st.write("The heatmap below shows the correlation between Recency, Frequency, and Monetary values, giving insights into how these factors relate.")
+        corr_matrix = rfm_df[['recency', 'frequency', 'monetary']].corr()
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+        st.pyplot(plt)
+        
+        # Download Button for Segmented Data
+        st.subheader("Download Segmented Data")
+        st.write("Download the customer segmentation data for further analysis or reporting.")
+        csv = rfm_df.to_csv(index=False)
+        st.download_button("Download CSV", csv, "segmented_customers.csv", "text/csv")
+        
+        # Predict Customer Segment
+        st.subheader("Predict Customer Segment Based on RFM Scores")
+        st.write("Enter the RFM values for a new customer to predict their segment.")
+        recency_input = st.number_input("Recency (Days)", min_value=0)
+        frequency_input = st.number_input("Frequency", min_value=1)
+        monetary_input = st.number_input("Monetary Amount", min_value=0)
+        
+        if st.button("Compute Segment"):
+            input_data = np.array([[recency_input, frequency_input, monetary_input]])
+            input_data_normalized = (input_data - rfm_values.mean().values) / rfm_values.std().values
+            cluster_pred = model.predict(input_data_normalized) if hasattr(model, 'predict') else model.fit_predict(input_data_normalized)
+            st.success(f"Predicted Cluster: {cluster_pred[0]}")
+    except Exception as e:
+        st.error(f"An error occurred while processing the clustering: {e}")
