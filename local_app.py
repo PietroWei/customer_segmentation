@@ -8,6 +8,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 
+# Streamlit App Setup (Must be the first command)
+st.set_page_config(layout="wide", page_title="Customer Segmentation", page_icon="📊")
+
 # Function to load the pre-trained model
 def load_model(model_name):
     model_path = f"scripts/models/{model_name}_model.pkl"  # Model directory path
@@ -41,8 +44,6 @@ rfm_df = df.groupby('CustomerID').agg(
 rfm_values = (rfm_df[['recency', 'frequency', 'monetary']] - rfm_df[['recency', 'frequency', 'monetary']].mean()) \
              / rfm_df[['recency', 'frequency', 'monetary']].std()
 
-# Streamlit App Setup
-st.set_page_config(layout="wide", page_title="Customer Segmentation", page_icon="📊")
 st.title("Customer Segmentation & Retention Analysis")
 st.markdown("""
     This dashboard allows interactive exploration of customer segments using **RFM analysis**.
