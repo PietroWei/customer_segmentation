@@ -54,14 +54,26 @@ st.markdown("""
     - Contains **invoices, customer IDs, quantity, unit price, and timestamps**
     - Helps analyze purchasing behavior and customer value
 """)
-
 # Sidebar Configuration
 st.sidebar.header("Settings")
 st.sidebar.write("Choose a clustering algorithm to visualize the customer segments.")
-algorithm = st.sidebar.selectbox("Select Clustering Algorithm", ["K-Means", "DBSCAN", "Agglomerative Clustering"])
+algorithm = st.sidebar.selectbox(
+    "Select Clustering Algorithm",
+    ["K-Means", "DBSCAN", "Agglomerative Clustering"],
+    help="""- **K-Means**: Partitions data into K clusters by minimizing variance within each cluster.
+            - **DBSCAN**: A density-based clustering algorithm that groups closely packed points while marking outliers.
+            - **Agglomerative Clustering**: A hierarchical clustering approach that iteratively merges data points into clusters."""
+)
+
+# Ensure the load_model function is defined
+def load_model(model_name):
+    # Placeholder function implementation
+    # Replace this with your actual model-loading logic
+    return model_name
 
 # Load selected clustering model
 model = load_model(algorithm.lower().replace(" ", "_"))
+
 
 if model is not None:
     try:
