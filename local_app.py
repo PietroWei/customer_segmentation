@@ -61,10 +61,29 @@ st.sidebar.write("Choose a clustering algorithm to visualize the customer segmen
 algorithm = st.sidebar.selectbox(
     "Select Clustering Algorithm",
     ["K-Means", "DBSCAN", "Agglomerative Clustering"],
-    help="""- **K-Means**: Partitions data into K clusters by minimizing variance within each cluster.
-            - **DBSCAN**: A density-based clustering algorithm that groups closely packed points while marking outliers.
-            - **Agglomerative Clustering**: A hierarchical clustering approach that iteratively merges data points into clusters."""
+    help="""Select a method to understand customer segmentation."""
 )
+
+# Dynamically update the description based on the selected algorithm
+if algorithm == "K-Means":
+    st.sidebar.markdown("""
+    **K-Means**:
+    - Partitions data into K clusters by minimizing variance within each cluster.
+    - Best suited for well-separated and spherical data.
+    """)
+elif algorithm == "DBSCAN":
+    st.sidebar.markdown("""
+    **DBSCAN**:
+    - A density-based clustering algorithm that groups closely packed points while marking outliers.
+    - Ideal for discovering clusters of arbitrary shape and handling noise.
+    """)
+elif algorithm == "Agglomerative Clustering":
+    st.sidebar.markdown("""
+    **Agglomerative Clustering**:
+    - A hierarchical clustering approach that iteratively merges data points into clusters.
+    - Suitable for smaller datasets and exploring hierarchical relationships.
+    """)
+
 # Load selected clustering model
 model_name = algorithm.lower().replace(" ", "_").replace("-", "")
 model = load_model(model_name)
